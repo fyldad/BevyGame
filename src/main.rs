@@ -43,7 +43,6 @@ fn setup(
 
 fn move_object(
     time: Res<Time>,
-    // keyboard_input: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -54,9 +53,8 @@ fn move_object(
     // Movable Square
     commands.spawn((
         Mesh2d(meshes.add(Circle::default())),
-        MeshMaterial2d(materials.add(Color::from(LinearRgba::WHITE))),
+        MeshMaterial2d(materials.add(Color::srgb(rand::random(), rand::random(), rand::random()))),
         Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(1.0)),
-        // Movable,
         MovementSpeed(200.0),
     ));
 
