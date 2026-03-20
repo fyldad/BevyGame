@@ -5,7 +5,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(Update, ( spawn_dot_every_frame, move_dots ).chain())
+        .add_systems(Update, ( spawn_dot_every_frame, move_dots, handle_wall_bounce ))
         .run();
 }
 
@@ -36,11 +36,25 @@ impl Angle {
 fn setup(
     mut commands: Commands,
 ) {
-    // Camera
     commands.spawn(Camera2d);
-
     commands.insert_resource(Angle::default());
+    commands.insert_resource(Bounds::default());
 
+}
+
+#[derive(Resource)]
+struct Bounds {
+    pub lower_left: Vec2,
+    pub upper_right: Vec2,
+}
+
+impl Default for Bounds {
+    fn default() -> Self {
+        Self {
+            lower_left: Vec2::new(-400.0, -300.0),
+            upper_right: Vec2::new(400.0, 300.0),
+        }
+    }
 }
 
 fn spawn_dot_every_frame(
@@ -57,9 +71,24 @@ fn spawn_dot_every_frame(
     commands.spawn((
         Mesh2d(meshes.add(Circle::default())),
         MeshMaterial2d(materials.add(Color::srgb(rand::random(), rand::random(), rand::random()))),
-        Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(10.0)),
+        Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(1.0)),
         DotDirection {direction: direction * 200.0},
     ));
+}
+
+fn handle_wall_bounce (
+    bounds: Res<Bounds>,
+    mut query: Query<(&Transform, &mut DotDirection)>,
+) {
+    for (transform, mut dot) in &mut query {
+        let position = transform.translation.truncate();
+        if position.x < bounds.lower_left.x || position.x > bounds.upper_right.x {
+            dot.direction.x *= -1.0;
+        }
+        if position.y < bounds.lower_left.y || position.y > bounds.upper_right.y {
+            dot.direction.y *= -1.0;
+        }
+    }
 }
 
 fn move_dots(
